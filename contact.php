@@ -5,32 +5,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $email = trim($_POST["email"]);
   $message = trim($_POST["message"]);
 
-
+  $error_message = array();
   if ($name == "" OR $email == "" OR $message == "") {
-    $error_message = "You must specify a value for name, email address and message.";
+    $error_message[] = "You must specify a value for name, email address and message.";
   }
 
   // Check for malicious form input
 
-  if (!isset($error_message)) {
+  if (!isset($error_message[0]) ){
     foreach ($_POST as $value) {
       if( stripos($value,'Content-Type:') != FALSE) {
-        $error_message = "There was a problem with the information you entered.";
+        $error_message[] = "There was a problem with the information you entered.";
       }
     }
   }
 
-  if (!isset($error_message) && $_POST["address"] != "") {
-    $error_message = "There was a problem with the form.";
+  if (!isset($error_message[0]) && $_POST["address"] != "") {
+    $error_message[] = "There was a problem with the form.";
   }
 
   require_once("inc/phpmailer/class.phpmailer.php");
   $mail = new PHPMailer();
-  if (!isset($error_message) && !$mail->ValidateAddress($email) ){
-    $error_message = "You must specify a valid email address.";
+  if (!isset($error_message[0]) && !$mail->ValidateAddress($email) ){
+    $error_message[] = "You must specify a valid email address.";
   }
 
-  if (!isset($error_message)) {
+  if (!isset($error_message[0]) ){
     $email_body = "";
 
     $email_body = $email_body . "Name: " . $name . "<br>";
@@ -51,7 +51,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       exit;
     } 
     else {
-      $error_message = "There was a problem sending the email: " . $mail->ErrorInfo;
+      $error_message[] = "There was a problem sending the email: " . $mail->ErrorInfo;
     } 
 
   }
@@ -69,16 +69,18 @@ include ('inc/header.php');
       <h1>Contact</h1>
 
       <?php if (isset($_GET["status"]) AND $_GET["status"] == "thanks") { ?>
-        <p>Thanks for the email!!!!! I&rsquo;ll be in touch shortly.</p>
+        <p>Thanks for the email! I&rsquo;ll be in touch shortly.</p>
       <?php } else { ?>
 
         
         <?php 
-          if (!isset($error_message)) {
+          if (!isset($error_message[0]) {
             echo '<p>I&rsquo;d love to hear from you! Complete the form to send me an email.</p>';
           } 
           else {
-            echo '<p class="message">' . $error_message . '</p>';
+              foreach($error_message as $error_text) {
+              echo '<p class="message">' . $error_text . '</p>';
+            }
           }
         ?>
         <form method="post" action="contact.php">
